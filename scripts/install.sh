@@ -14,7 +14,7 @@ items=(
   .github/ISSUE_TEMPLATE .github/pull_request_template.md .github/CODEOWNERS
   .github/workflows/ci.yml .github/workflows/deploy.yml
   docs/adr/0000-template.md docs/runbooks/rollback.md
-  scripts/metrics.py scripts/setup-github.sh
+  scripts/metrics.py scripts/setup-github.sh scripts/tests
 )
 
 copied=0; skipped=0

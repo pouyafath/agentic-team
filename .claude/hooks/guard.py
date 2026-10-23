@@ -5,12 +5,16 @@ Claude Code runs this before every Bash, Edit, Write, MultiEdit and NotebookEdit
 and passes the call as JSON on stdin. Subagent calls carry `agent_type`. Exit code 2
 blocks the call and shows stderr to the agent. The policy lives in policy.json.
 
-The guard catches mistakes and keeps roles honest. It is not a sandbox: the real
-boundaries are GitHub branch protection, CODEOWNERS, environment approvals and
-keeping production credentials out of agent environments.
+File writes must stay inside the project (CLAUDE_PROJECT_DIR) or one of its git worktrees,
+apart from temp dirs, Claude's memory and plan files, and the roots listed in
+AGENTIC_EXTRA_WRITE_ROOTS. That keeps agents out of other projects on shared machines.
+
+The guard catches mistakes and keeps roles honest. It is not a sandbox: shell commands can
+still write anywhere, and the real boundaries are GitHub branch protection, CODEOWNERS,
+environment approvals and keeping production credentials out of agent environments.
 
 Set AGENTIC_MAINTENANCE=1 in the environment that launches Claude Code to let a human
-edit protected files and lift per-role write scopes. Global command rules always apply.
+edit protected files and lift write scopes. Global command rules always apply.
 """
 import fnmatch
 import json
@@ -40,6 +44,37 @@ def repo_root(path):
         d = parent
 
 
+def within(path, root):
+    root = os.path.realpath(root)
+    return os.path.commonpath([path, root]) == root
+
+
+def worktree_of(root, project):
+    """True when `root` is a linked worktree (or submodule) whose git dir lives in `project`."""
+    dotgit = os.path.join(root, ".git")
+    if not os.path.isfile(dotgit):
+        return False
+    with open(dotgit, encoding="utf-8") as f:
+        line = f.readline().strip()
+    if not line.startswith("gitdir:"):
+        return False
+    gitdir = os.path.realpath(os.path.join(root, line[len("gitdir:"):].strip()))
+    return within(gitdir, os.path.join(project, ".git"))
+
+
+def writable_outside(policy, path, env):
+    """Temp dirs, Claude memory and plan files, and extra roots from the environment."""
+    home = env.get("HOME") or os.path.expanduser("~")
+    config = env.get("CLAUDE_CONFIG_DIR") or os.path.join(home, ".claude")
+    projects = os.path.realpath(os.path.join(config, "projects"))
+    if within(path, projects) and "/memory/" in path[len(projects):].replace(os.sep, "/"):
+        return True
+    roots = list(policy.get("write_containment", {}).get("always", []))
+    roots += [env.get("TMPDIR", ""), os.path.join(config, "plans")]
+    roots += env.get("AGENTIC_EXTRA_WRITE_ROOTS", "").split(os.pathsep)
+    return any(r and within(path, r) for r in roots)
+
+
 def matches(rel, patterns):
     return any(fnmatch.fnmatchcase(rel, p) for p in patterns)
 
@@ -50,13 +85,23 @@ def role_rules(policy, agent):
     return policy["agents"].get(agent, policy.get("unlisted_agents", {}))
 
 
-def check_write(policy, agent, path, maintenance):
-    root = repo_root(path)
-    if root is None:
-        return None  # outside any repository (scratch files)
-    rel = os.path.relpath(os.path.abspath(path), root).replace(os.sep, "/")
+def check_write(policy, agent, path, maintenance, env):
     if maintenance:
         return None
+    path = os.path.realpath(path)
+    root = repo_root(path)
+    project = env.get("CLAUDE_PROJECT_DIR")
+    if project:
+        project = os.path.realpath(project)
+        inside = within(path, project) or (root is not None and worktree_of(root, project))
+        if not inside:
+            if writable_outside(policy, path, env):
+                return None
+            return (f"'{path}' is outside the project. Write inside the project checkout or its "
+                    "worktrees; scratch files go to the temp dir or AGENTIC_EXTRA_WRITE_ROOTS.")
+    if root is None:
+        return None  # not in a repository (scratch files)
+    rel = os.path.relpath(path, root).replace(os.sep, "/")
     if matches(rel, policy.get("protected_paths", [])):
         return (f"'{rel}' is a protected guardrail file. Only the human Product Owner "
                 "changes it (maintenance mode).")
@@ -87,7 +132,8 @@ def check_bash(policy, agent, command, maintenance):
     return None
 
 
-def decide(event, policy, maintenance=False):
+def decide(event, policy, maintenance=False, env=None):
+    env = os.environ if env is None else env
     tool = event.get("tool_name", "")
     tool_input = event.get("tool_input") or {}
     agent = event.get("agent_type") or None
@@ -99,7 +145,7 @@ def decide(event, policy, maintenance=False):
             return None
         if not os.path.isabs(path):
             path = os.path.join(event.get("cwd") or os.getcwd(), path)
-        return check_write(policy, agent, path, maintenance)
+        return check_write(policy, agent, path, maintenance, env)
     return None
 
 

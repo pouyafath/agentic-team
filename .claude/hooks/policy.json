@@ -3,6 +3,11 @@
 
   "protected_paths": [".claude/**", "CLAUDE.md", ".github/CODEOWNERS"],
 
+  "write_containment": {
+    "_comment": "Edit/Write outside the project (CLAUDE_PROJECT_DIR) and its worktrees is blocked, except in these roots, $TMPDIR, Claude memory and plan files, and AGENTIC_EXTRA_WRITE_ROOTS (colon-separated, e.g. a data dir). Protects other projects on shared machines. Shell commands are not covered.",
+    "always": ["/tmp", "/var/tmp"]
+  },
+
   "main": {
     "_comment": "Main session = PM/orchestrator. It delegates; it does not write code.",
     "write_allow": ["docs/product/**"]
