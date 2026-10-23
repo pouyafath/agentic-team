@@ -1,0 +1,47 @@
+name: Story
+description: A user story with testable acceptance criteria (one story = one branch = one PR)
+title: "[Story] "
+labels: ["type:story", "status:backlog"]
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      description: As a <user>, I want <capability>, so that <outcome>.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Numbered and testable. Each criterion becomes at least one automated acceptance test.
+      value: |
+        AC1: Given ... When ... Then ...
+        AC2: Given ... When ... Then ...
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk tier
+      description: The PM sets the matching risk label. risk:2 needs PO approval (label po:approved).
+      options:
+        - "risk:0 (docs, copy, styling, internal tooling)"
+        - "risk:1 (standard product feature)"
+        - "risk:2 (auth, payments or money math, PII, migrations, infra, secrets, external integrations)"
+    validations:
+      required: true
+  - type: textarea
+    id: nfr
+    attributes:
+      label: Non-functional requirements
+      description: Performance, security, privacy, accessibility, observability expectations.
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+  - type: textarea
+    id: refs
+    attributes:
+      label: Design references and dependencies
+      description: Epic, ADRs, API contracts (docs/api/...), blocking issues (#n).

@@ -1,0 +1,14 @@
+# The human Product Owner must review changes to the team's guardrails, CI and
+# sensitive areas. scripts/setup-github.sh replaces @PRODUCT_OWNER with your GitHub login.
+# Enable "Require review from Code Owners" in the branch protection for main.
+
+/.claude/            @PRODUCT_OWNER
+/CLAUDE.md           @PRODUCT_OWNER
+/.github/            @PRODUCT_OWNER
+/infra/              @PRODUCT_OWNER
+/deploy/             @PRODUCT_OWNER
+/docs/adr/           @PRODUCT_OWNER
+
+# Add risk:2 code areas as they appear, for example:
+# /src/payments/     @PRODUCT_OWNER
+# /src/auth/         @PRODUCT_OWNER

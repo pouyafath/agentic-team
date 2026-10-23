@@ -1,0 +1,32 @@
+name: Bug
+description: A defect found by QA, review, staging, production or a human
+title: "[Bug] "
+labels: ["type:bug", "status:backlog"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Steps to reproduce, expected vs actual, evidence (logs, test name, screenshot).
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options: ["blocker", "major", "minor"]
+    validations:
+      required: true
+  - type: dropdown
+    id: found
+    attributes:
+      label: Where it was found
+      description: Bugs found after a story was merged count as escaped defects (label defect:escaped).
+      options: ["QA / review (before merge)", "staging", "production", "other"]
+    validations:
+      required: true
+  - type: input
+    id: story
+    attributes:
+      label: Originating story
+      description: "#n of the story that introduced it, if known"

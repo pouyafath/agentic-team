@@ -1,0 +1,66 @@
+# Deterministic quality gates. Mark every job here as a required status check on main.
+# The devops agent adds toolchain setup (setup-node, setup-python, caches, ...) per project
+# and may harden it by pinning actions to commit SHAs.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: make ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      # - uses: actions/setup-node@v5      # project-specific toolchain goes here
+      - name: Lint, types, unit and acceptance tests, dependency audit
+        run: make ci
+
+  secrets:
+    name: secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Organization-owned repositories need a (free) license key:
+          # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  sast:
+    name: static analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v6
+      - run: semgrep scan --config p/default --error --metrics=off
+
+  dependencies:
+    name: dependency review
+    # Free on public repos; private repos need GitHub Code Security (set repo variable GHAS_ENABLED=true).
+    if: github.event_name == 'pull_request' && (!github.event.repository.private || vars.GHAS_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure

@@ -1,0 +1,45 @@
+# Deployments happen only here, never from an agent shell.
+#   staging    : every push to main (after CI), once a human sets repo variable DEPLOY_ENABLED=true
+#   production : when the PO publishes a release, and only after a required reviewer approves the
+#                "production" environment (Settings > Environments > production > Required reviewers).
+# Credentials live in environment secrets; agents never see them.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  staging:
+    if: vars.DEPLOY_ENABLED == 'true' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: staging
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - run: make deploy-staging
+      - run: make smoke-staging
+
+  production:
+    if: vars.DEPLOY_ENABLED == 'true' && github.event_name == 'release'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - run: make deploy-production
+      - run: make smoke-production
+      # On smoke failure, follow docs/runbooks/rollback.md (redeploy the previous release tag).

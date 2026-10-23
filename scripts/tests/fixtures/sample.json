@@ -1,0 +1,41 @@
+{
+  "stories": [
+    {"number": 1, "title": "Walking skeleton", "state": "CLOSED", "createdAt": "2026-10-01T09:00:00Z", "closedAt": "2026-10-02T09:00:00Z",
+     "labels": [{"name": "type:story"}, {"name": "risk:1"}]},
+    {"number": 2, "title": "Create playlist", "state": "CLOSED", "createdAt": "2026-10-02T09:00:00Z", "closedAt": "2026-10-05T09:00:00Z",
+     "labels": [{"name": "type:story"}, {"name": "risk:1"}]},
+    {"number": 3, "title": "Login", "state": "OPEN", "createdAt": "2026-10-06T09:00:00Z", "closedAt": null,
+     "labels": [{"name": "type:story"}, {"name": "risk:2"}, {"name": "status:blocked"}]}
+  ],
+  "bugs": [
+    {"number": 10, "createdAt": "2026-10-07T09:00:00Z", "labels": [{"name": "type:bug"}],
+     "body": "### What happened\n\nCrash\n\n### Severity\n\nmajor\n\n### Where it was found\n\nproduction\n\n### Originating story\n\n#2"},
+    {"number": 11, "createdAt": "2026-10-07T10:00:00Z", "labels": [{"name": "type:bug"}],
+     "body": "### Where it was found\n\nQA / review (before merge)"}
+  ],
+  "prs": [
+    {"number": 4, "headRefName": "story/1-walking-skeleton", "state": "MERGED", "createdAt": "2026-10-01T12:00:00Z", "mergedAt": "2026-10-01T20:00:00Z",
+     "comments": [
+       {"body": "<!-- agentic-verdict {\"story\":1,\"agent\":\"qa\",\"verdict\":\"PASS\",\"sha\":\"aaa\",\"cycle\":1,\"cost_usd\":1.5} -->\n## QA report"},
+       {"body": "<!-- agentic-verdict {\"story\":1,\"agent\":\"reviewer\",\"verdict\":\"APPROVE\",\"sha\":\"aaa\",\"cycle\":1,\"cost_usd\":2.0} -->\n## Review"}
+     ]},
+    {"number": 5, "headRefName": "story/2-create-playlist", "state": "MERGED", "createdAt": "2026-10-02T12:00:00Z", "mergedAt": "2026-10-04T12:00:00Z",
+     "comments": [
+       {"body": "<!-- agentic-verdict {\"story\":2,\"agent\":\"qa\",\"verdict\":\"FAIL\",\"sha\":\"bbb\",\"cycle\":1} -->"},
+       {"body": "<!-- agentic-verdict {\"story\":2,\"agent\":\"reviewer\",\"verdict\":\"APPROVE\",\"sha\":\"bbb\",\"cycle\":1} -->"},
+       {"body": "<!-- agentic-verdict {\"story\":2,\"agent\":\"qa\",\"verdict\":\"PASS\",\"sha\":\"ccc\",\"cycle\":2} -->"},
+       {"body": "<!-- agentic-verdict {\"story\":2,\"agent\":\"reviewer\",\"verdict\":\"APPROVE\",\"sha\":\"ccc\",\"cycle\":2} -->"},
+       {"body": "unrelated human comment"}
+     ]},
+    {"number": 6, "headRefName": "story/3-login", "state": "OPEN", "createdAt": "2026-10-06T12:00:00Z", "mergedAt": null,
+     "comments": [
+       {"body": "<!-- agentic-verdict {\"story\":3,\"agent\":\"reviewer\",\"verdict\":\"CHANGES_REQUESTED\",\"sha\":\"ddd\",\"cycle\":3} -->"},
+       {"body": "<!-- agentic-verdict {\"story\":3,\"agent\":\"pm\",\"verdict\":\"ESCALATED\",\"sha\":\"ddd\",\"cycle\":3} -->"}
+     ]},
+    {"number": 7, "headRefName": "ops/ci", "state": "MERGED", "createdAt": "2026-10-01T10:00:00Z", "mergedAt": "2026-10-01T11:00:00Z", "comments": []}
+  ],
+  "releases": [
+    {"tagName": "v0.1.0", "publishedAt": "2026-10-05T12:00:00Z", "isDraft": false},
+    {"tagName": "v0.2.0", "publishedAt": null, "isDraft": true}
+  ]
+}
