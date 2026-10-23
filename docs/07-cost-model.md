@@ -1,5 +1,11 @@
 # 7. Cost model
 
+> **Billing mode for this team: the PO's Claude subscription (default).** Sessions in Claude
+> Code (cloud, CLI, desktop), including every subagent they spawn, draw on the subscription's usage
+> limits instead of per-token API billing. The dollar figures below then translate into **how much
+> of your plan's usage a story consumes**, not an invoice. API keys are optional, for when you need
+> hard per-project cost attribution (M3 experiments) or capacity beyond the plan.
+
 All numbers are **estimates for planning**. They must be calibrated with real usage in M1 and M2.
 Real token counts commonly vary 2-3× with codebase size, story clarity, and effort level.
 
@@ -70,9 +76,22 @@ These include PM planning (~$3 per week) and weekly releases. Add the one-off ki
 - **Staging hosting:** usually $0-30 per month on a small PaaS or free tier for a pilot app.
 - **Third-party sandboxes** (payment providers, music APIs): typically free in test mode.
 
-**Subscription alternative:** running sessions on a Claude subscription plan instead of API
-keys swaps per-token billing for plan usage limits. The token profile above is still the right tool
-for capacity planning. Use API keys when you need per-project cost attribution (M3 experiments).
+## Running on a Claude subscription (default)
+
+- **What uses the plan:** interactive and cloud Claude Code sessions, including subagents. The
+  Claude Code GitHub Action can also run on the plan through a `CLAUDE_CODE_OAUTH_TOKEN`
+  secret (generated with `claude setup-token`; available on Pro, Max, Team and Enterprise).
+- **What changes:** the constraint becomes plan usage limits (rolling and weekly windows), not
+  dollars. Opus-heavy work uses the allowance faster, so model tiering by role still matters
+  because it raises how many stories fit in a window.
+- **Throughput planning:** treat the per-story estimates above as relative weights (small ≈ 1,
+  medium ≈ 3, large ≈ 7). In M1, record how many stories of each size fit in a usage window,
+  and plan WIP from that.
+- **When limits bite:** the PM pauses at a clean point (work is pushed, and state is in GitHub)
+  and resumes in the next window with `/board`. Alternatives: lower effort on routine roles, move
+  QA and devops to Sonnet at medium effort, or add an API key for overflow.
+- **Trade-off:** no per-project dollar attribution. `scripts/metrics.py` still reports cycles,
+  throughput and quality, so cost comparisons in M3 use tokens or a dedicated API key.
 
 ## Cost controls (built in)
 

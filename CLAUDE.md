@@ -28,7 +28,7 @@ Only the PM delegates. Agents do not talk to each other; they hand off through a
 
 ## Hard rules (no exceptions without written PO approval)
 
-1. Never push to `main`, force-push, or merge a PR. The PO merges.
+1. Never push to `main` or force-push. Only the PM merges, and only through the merge gate below.
 2. Never read, print, log, or commit secrets. `.env*`, keys and credentials are off limits.
    Agents never hold production credentials. Deployments happen only through CI.
 3. Never weaken a gate: no skipped or deleted tests to get green, no `--no-verify`, no edits to
@@ -50,7 +50,7 @@ Only the PM delegates. Agents do not talk to each other; they hand off through a
 - **risk:1**: normal product features. Full workflow.
 - **risk:2**: authN/authZ, payments, money math, PII, data migrations, infra, secrets, external
   integrations. Architect review, test-first QA with negative and security cases, max-effort
-  review, deterministic scanners must pass, and a human code review is required.
+  review, deterministic scanners must pass, and the reviewer's human-attention items go to the PO.
 
 ## Definition of Done
 
@@ -58,7 +58,17 @@ Only the PM delegates. Agents do not talk to each other; they hand off through a
 - [ ] CI is green on the PR head SHA (lint, types, unit, acceptance, secret and dependency scans).
 - [ ] QA verdict `PASS` and review verdict `APPROVE` on the same head SHA.
 - [ ] No open blocking defects. Docs and changelog updated where behavior changed.
-- [ ] PO merged the PR. Staging deploy and smoke test are green where applicable.
+- [ ] Merged by the PM through the merge gate. Staging deploy and smoke test are green where applicable.
+
+## Merge gate (autonomous merge, decided by the PO)
+
+The PM merges a PR itself when, and only when, all of these hold on the same head SHA:
+CI required checks green, QA `PASS`, reviewer `APPROVE`, no open blocking findings.
+Command: `gh pr merge <pr> --squash --delete-branch --match-head-commit <sha>`
+(never `--admin`; the guard enforces both). Exceptions that still need the PO's explicit OK first:
+`design:` PRs (architecture, gate G2) and PRs that change `.github/workflows/`.
+Production deploys always need the PO (gate G4); merging only reaches staging.
+Option `risk2_human_merge`: **off**. When on, risk:2 PRs also wait for the PO's OK.
 
 ## Verdict marker (first line of every QA, review, and escalation comment)
 

@@ -22,7 +22,9 @@ which halves input and output prices. Cache reads cost the same on both (see
 also adds diversity, so the reviewer is less likely to share the author's blind spots. Both
 choices are hypotheses that configuration C4 in `docs/06-evaluation.md` tests.
 
-**Always forbidden for every agent:** push to `main`, force-push, merge PRs, delete remote
+**Merging:** only the PM, only via the merge gate (`gh pr merge --match-head-commit <verified SHA>`, never `--admin`).
+
+**Always forbidden for every agent:** push to `main`, force-push, delete remote
 branches, publish releases, deploy, manage secrets, read `.env*`, dump the environment, pipe
 downloads into a shell, live payment operations, or edit guardrail files.
 
@@ -33,8 +35,9 @@ downloads into a shell, live payment operations, or edit guardrail files.
 - **Inputs:** PO ideas and answers; agent reports; GitHub state.
 - **Outputs:** brief and epic issues, story issues (spec plus acceptance criteria), labels and
   state, briefs to agents, verdict comments posted on PRs, escalations, status updates.
-- **Decides:** story split and order *within* PO-approved priorities, routing, fix vs escalate.
-- **Never decides:** priorities, scope changes, technology with lasting cost, merges, releases.
+- **Decides:** story split and order *within* PO-approved priorities, routing, fix vs escalate,
+  and merging when the merge gate is satisfied.
+- **Never decides:** priorities, scope changes, technology with lasting cost, CI-workflow changes, production releases.
 
 ### Developer
 - **Inputs:** brief (story #, mode, branches, docs, findings).
@@ -89,8 +92,8 @@ Verdict marker JSON schema (in the first line of every QA, review and escalation
 
 ## Human Product Owner
 
-Owns: business goals and priorities (G1), architecture and technology approval (G2), every merge
-(G3), production releases (G4), and any sensitive operation such as money, real users, production data,
+Owns: business goals and priorities (G1), architecture and technology approval (G2), the merge
+policy (G3, delegated to the automated merge gate), production releases (G4), and any sensitive operation such as money, real users, production data,
 credentials or legal matters (G5). The PO also arbitrates escalations and changes the guardrails
 (maintenance mode: `AGENTIC_MAINTENANCE=1`).
 

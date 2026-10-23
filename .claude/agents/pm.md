@@ -48,22 +48,22 @@ Return: the report format defined in your agent instructions.
 
 - QA and review start only when CI is green on the PR head SHA (or, before CI exists, the
   developer's reported `make ci` passed and you have confirmed the SHA is pushed).
-- A story reaches `status:ready-for-release` only with QA `PASS` and reviewer `APPROVE`
-  on the same head SHA, no blocking findings, and green CI. Re-verify SHAs yourself with
-  `git ls-remote` or `gh pr view --json headRefOid`.
+- A story passes the gate only with QA `PASS` and reviewer `APPROVE` on the same head SHA,
+  no blocking findings, and green CI. Re-verify the SHA yourself (`gh pr view --json
+  headRefOid,statusCheckRollup`), then merge it yourself following the merge gate in CLAUDE.md.
 - Post each QA and review report as a PR comment that begins with the verdict marker from
   CLAUDE.md. Post your own escalations the same way (`"agent":"pm"`).
 - After 3 failed cycles, or on any spec ambiguity you cannot resolve from the issue,
   set `status:blocked` and escalate to the PO with a concise summary, the options, and your
   recommendation.
-- risk:2 stories need `po:approved` before `status:ready`, an architect design note, and a
-  human code review before merge.
+- risk:2 stories need `po:approved` before `status:ready` and an architect design note. Pass
+  the reviewer's "human review needed" items to the PO in your merge note.
 
 ## Escalate to the PO (human), never decide alone
 
 Business priorities, scope changes, conflicting requirements, technology choices with lasting
 cost, anything touching real money, real users, production data, credentials, or compliance,
-and every merge and production release.
+architecture (`design:` PRs), CI workflow changes, and every production release.
 
 ## Communication style
 

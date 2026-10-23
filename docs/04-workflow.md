@@ -12,17 +12,17 @@ stateDiagram-v2
   Ready --> InProgress: /deliver (developer ∥ QA test design)
   InProgress --> InReview: PR pushed, CI green
   InReview --> InProgress: QA FAIL or CHANGES_REQUESTED (cycle < 3)
-  InReview --> ReadyForRelease: QA PASS + APPROVE on same SHA + CI green
   InReview --> Blocked: 3 failed cycles
   InProgress --> Blocked: spec ambiguity / decision needed
   Blocked --> Ready: PO decides (re-spec, split, accept)
-  ReadyForRelease --> Done: PO merges (G3), staging green
-  ReadyForRelease --> InProgress: staging smoke fails
+  InReview --> Merged: PM merges via merge gate (G3, automated)
+  Merged --> Done: staging green, released (G4)
+  Merged --> InProgress: staging smoke fails (bug story)
   Done --> [*]
 ```
 
 Labels: `status:backlog`, `status:ready`, `status:in-progress`, `status:in-review`,
-`status:ready-for-release`, `status:blocked`. Done = the issue is closed by the merged PR.
+`status:ready-for-release` (merged, waiting for production), `status:blocked`. The issue closes when its PR merges.
 
 ## Phases
 
@@ -33,7 +33,7 @@ Labels: `status:backlog`, `status:ready`, `status:in-progress`, `status:in-revie
 | 3 | Implementation | Developer (∥ QA test design) | Architect for risk:2 | code, unit tests, acceptance tests, PR with handoff | CI green on head SHA |
 | 4 | Testing and QA | QA | — | verdict report, defects, regression tests | QA `PASS` on head SHA |
 | 5 | Code and security review (∥ phase 4) | Reviewer | Human reviewer for risk:2 | verdict report, scanner results | `APPROVE` on the same SHA |
-| 6 | Integration and deployment | DevOps | PM | merged change, staging deploy, smoke results, draft release, rollback plan | **G3** PO merges; **G4** PO approves production |
+| 6 | Integration and deployment | DevOps | PM | merged change, staging deploy, smoke results, draft release, rollback plan | **G3** automated merge gate; **G4** PO approves production |
 
 ## Sequence for one story
 
@@ -64,7 +64,8 @@ sequenceDiagram
   REV-->>PM: APPROVE/CHANGES report
   PM->>GH: post verdict comments
   alt both pass on same SHA
-    PM->>PO: ready to merge (G3)
+    PM->>GH: merge --match-head-commit SHA (G3)
+    PM->>PO: merged (one-line note)
   else findings, cycle < 3
     PM->>DEV: brief (fix, findings)
   else cycle 3 fails
@@ -73,6 +74,8 @@ sequenceDiagram
 ```
 
 ## Gates
+
+> **Merge policy (PO decision, Oct 2026):** agents merge autonomously through the merge gate. Production stays human-approved.
 
 **Automated (deterministic, required checks on `main`):** `make ci` (lint, types, unit and
 acceptance tests, ecosystem audit), secret scan (gitleaks), static analysis (Semgrep), and
@@ -86,8 +89,8 @@ The author's self-report never counts.
 | Gate | Decision | Mechanism |
 |---|---|---|
 | G1 Scope | Business goals, MVP, backlog order (weekly) | PO replies on the brief and planning comment |
-| G2 Architecture | Stack, ADRs, build vs buy, vendors | PO merges `design:` PR |
-| G3 Merge | Every PR in v1 | Only the PO merges (agents are blocked from merging) |
+| G2 Architecture | Stack, ADRs, build vs buy, vendors | PO approves `design:` PR; the PM merges it |
+| G3 Merge (automated, PO decision) | Every story PR | PM merges only with CI green + QA PASS + APPROVE on the same SHA, via `gh pr merge --match-head-commit`. GitHub branch protection refuses red checks; the guard blocks `--admin` and merges by any other agent. Exceptions needing the PO's OK: `design:` PRs, CI-workflow changes, and risk:2 when `risk2_human_merge` is on |
 | G4 Production | Every production release | PO publishes the draft release, then approves the `production` environment |
 | G5 Sensitive operations | Secrets, real money, real user data, destructive operations, compliance | Agents prepare; humans execute |
 
@@ -100,7 +103,7 @@ The author's self-report never counts.
 | Architect | — | if design changes | required design note |
 | QA test-first | optional | yes | yes, including negative and security cases |
 | Reviewer effort | medium | high | max, plus a list of items for human review |
-| Human code review | — | optional | required (CODEOWNERS) |
+| Human attention | — | — | reviewer lists items for the PO; optional `risk2_human_merge` |
 | Optional cross-vendor second review | — | — | trial in M3 |
 
 ## Failure handling

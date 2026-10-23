@@ -44,12 +44,13 @@ fi
 
 if $protect; then
   # Required checks match the job names in .github/workflows/ci.yml.
-  # Approving reviews stay at 0 while agents push with your identity (you cannot approve your own PR).
-  # Once agents use a separate bot account, raise it to 1 and require code-owner review.
+  # enforce_admins: GitHub refuses any merge with red required checks, even from your identity,
+  # which is what the PM merges with. Approving reviews stay at 0 because merges are autonomous
+  # (the QA and reviewer verdicts are the review).
   gh api -X PUT "repos/$repo/branches/main/protection" --input - <<'JSON' >/dev/null
 {
   "required_status_checks": {"strict": true, "contexts": ["make ci", "secret scan", "static analysis"]},
-  "enforce_admins": false,
+  "enforce_admins": true,
   "required_pull_request_reviews": {"required_approving_review_count": 0, "dismiss_stale_reviews": true},
   "restrictions": null,
   "required_linear_history": true,

@@ -77,6 +77,8 @@ def check_bash(policy, agent, command, maintenance):
     rules = list(policy.get("bash_deny", []))
     if agent:
         rules += policy["agents"].get(agent, {}).get("bash_deny", [])
+        if agent != "pm":
+            rules += policy.get("bash_deny_subagents", [])
     if not maintenance:
         rules += policy.get("bash_deny_unless_maintenance", [])
     for rule in rules:

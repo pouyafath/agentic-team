@@ -1,6 +1,6 @@
 ---
 name: deliver
-description: Phases 3-5 of the agentic SDLC for one story. Implement with the developer, design and run tests with QA, review with the reviewer, loop on findings, and finish with a PR ready for the Product Owner to merge. Use with a story issue number in status:ready.
+description: Phases 3-5 of the agentic SDLC for one story. Implement with the developer, design and run tests with QA, review with the reviewer, loop on findings, and merge it through the merge gate. Use with a story issue number in status:ready.
 argument-hint: <story issue number>
 disable-model-invocation: true
 ---
@@ -48,9 +48,12 @@ It must start with the verdict marker. Check that both verdicts name the current
 ## 4. Decide
 
 - **QA PASS + reviewer APPROVE + CI green on the same SHA:** mark the PR ready
-  (`gh pr ready <pr>`), set `status:ready-for-release`, and ask the PO to review and merge.
-  For risk:2, request a human code review explicitly and list what the reviewer flagged for
-  human attention.
+  (`gh pr ready <pr>`), re-check the head SHA, then merge:
+  `gh pr merge <pr> --squash --delete-branch --match-head-commit <sha>`.
+  Set `status:ready-for-release` on the issue (it closes via `Closes #n`). Tell the PO in one
+  line, including any items the reviewer flagged for human attention. If CLAUDE.md has
+  `risk2_human_merge` on and the story is risk:2, ask the PO first.
+  If the merge is refused (a check went red, or the head moved), go back to step 2.
 - **Otherwise:** merge all blocking findings into one numbered list. If `cycle < 3`, send
   them to the developer in mode `fix` (resume the same instance if possible), then
   `cycle += 1` and go back to step 2.
@@ -65,4 +68,4 @@ Ask the PO.
 
 ## Done
 
-After the PO merges: `/release` covers staging and production. The issue closes with the PR (`Closes #n`).
+After merging, staging deploys automatically. `/release` bundles merged stories for production, which the PO approves.

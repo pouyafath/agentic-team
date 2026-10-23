@@ -42,8 +42,19 @@ class BashRules(unittest.TestCase):
                     "git fetch origin && git switch --detach abc123"]:
             self.assertAllowed(cmd, "developer")
 
-    def test_merge_release_and_admin_are_human_only(self):
-        for cmd in ["gh pr merge 12 --squash", "gh api -X PUT repos/o/r/pulls/12/merge",
+    def test_merge_gate(self):
+        sha = "0123456789abcdef0123456789abcdef01234567"
+        gated = f"gh pr merge 12 --squash --delete-branch --match-head-commit {sha}"
+        self.assertAllowed(gated)              # main session acting as PM
+        self.assertAllowed(gated, "pm")
+        for agent in ["developer", "qa", "reviewer", "architect", "devops", "general-purpose"]:
+            self.assertBlocked(gated, agent)   # only the orchestrator merges
+        self.assertBlocked("gh pr merge 12 --squash")                      # no SHA binding
+        self.assertBlocked(f"gh pr merge 12 --admin --match-head-commit {sha}")
+        self.assertBlocked("gh api -X PUT repos/o/r/pulls/12/merge")
+
+    def test_release_and_admin_are_human_only(self):
+        for cmd in [
                     "gh secret set API_KEY", "gh repo delete o/r --yes",
                     "gh release create v1.0.0", "gh release edit v1 --draft=false",
                     "gh api repos/o/r/branches/main/protection"]:
@@ -164,9 +175,9 @@ class HookProtocol(unittest.TestCase):
     def test_exit_codes(self):
         ok = self.run_hook(json.dumps({"tool_name": "Bash", "tool_input": {"command": "ls"}}))
         self.assertEqual(ok.returncode, 0)
-        blocked = self.run_hook(json.dumps({"tool_name": "Bash", "tool_input": {"command": "gh pr merge 1"}}))
+        blocked = self.run_hook(json.dumps({"tool_name": "Bash", "tool_input": {"command": "gh repo delete o/r"}}))
         self.assertEqual(blocked.returncode, 2)
-        self.assertIn("Product Owner", blocked.stderr)
+        self.assertIn("humans", blocked.stderr)
         broken = self.run_hook("not json")
         self.assertEqual(broken.returncode, 2)  # fail closed
 

@@ -56,8 +56,9 @@
     {"pattern": "\\bgit\\b[^;&|]*\\bpush\\b[^;&|]*[\\s:](main|master)(\\s|$)", "reason": "Pushing to main is never allowed; open a PR."},
     {"pattern": "\\bgit\\b[^;&|]*\\bpush\\b[^;&|]*(\\s--delete\\b|\\s-d\\b|\\s:\\S)", "reason": "Deleting remote branches is reserved for humans."},
     {"pattern": "--no-verify\\b", "reason": "Bypassing git hooks is not allowed."},
-    {"pattern": "\\bgh\\s+pr\\s+merge\\b", "reason": "Only the human Product Owner merges PRs."},
-    {"pattern": "\\bgh\\s+api\\b[^;&|]*pulls/\\d+/merge", "reason": "Only the human Product Owner merges PRs."},
+    {"pattern": "\\bgh\\s+pr\\s+merge\\b[^;&|]*--admin\\b", "reason": "Merging with --admin bypasses branch protection; never allowed."},
+    {"pattern": "\\bgh\\s+pr\\s+merge\\b(?![^;&|]*--match-head-commit)", "reason": "Merge only through the merge gate: gh pr merge <pr> --squash --delete-branch --match-head-commit <verified sha>."},
+    {"pattern": "\\bgh\\s+api\\b[^;&|]*pulls/\\d+/merge", "reason": "Merge only through the merge gate (gh pr merge --match-head-commit)."},
     {"pattern": "\\bgh\\s+(secret|variable)\\s+(set|delete|remove)\\b", "reason": "Secrets and variables are managed by humans."},
     {"pattern": "\\bgh\\s+repo\\s+(delete|archive|edit|rename)\\b", "reason": "Repository administration is reserved for humans."},
     {"pattern": "\\bgh\\s+api\\b[^;&|]*(-X|--method)\\s*DELETE", "reason": "Destructive GitHub API calls are reserved for humans."},
@@ -75,6 +76,10 @@
     {"pattern": "\\b(fly|flyctl)\\s+deploy\\b|\\bvercel\\b[^;&|]*--prod\\b|\\bnetlify\\s+deploy\\b[^;&|]*--prod\\b|\\bgcloud\\s+(run|app|functions)\\s+deploy\\b|\\brailway\\s+up\\b", "reason": "Deployments run only through CI."},
     {"pattern": "\\b(npm|pnpm|yarn)\\s+publish\\b|\\btwine\\s+upload\\b|\\bdocker\\s+push\\b|\\bcargo\\s+publish\\b|\\bgem\\s+push\\b", "reason": "Publishing artifacts runs only through CI."},
     {"pattern": "\\bstripe\\b[^;&|]*--live\\b|\\b(sk|rk)_live_[0-9a-zA-Z]+", "reason": "Live payment credentials and live-mode operations are never used by agents."}
+  ],
+
+  "bash_deny_subagents": [
+    {"pattern": "\\bgh\\s+pr\\s+merge\\b", "reason": "Only the PM (orchestrator) merges, after both verdicts pass on the same SHA."}
   ],
 
   "bash_deny_unless_maintenance": [

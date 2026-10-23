@@ -16,7 +16,7 @@ humans on every irreversible decision, and grow only when the metrics say so.
 ```
 You ──idea──▶ PM ──briefs──▶ Developer ∥ QA(test-first) ──PR──▶ CI ──▶ QA(verify) ∥ Reviewer
  ▲                                                                          │
- └──── merge (G3) · release approval (G4) ◀── ready-for-release ◀── PASS + APPROVE on same SHA
+ └──── release approval (G4) ◀── staging ◀── PM merges (G3) ◀── PASS + APPROVE + CI on same SHA
 ```
 
 - **State lives in GitHub:** issues are the backlog, labels are the workflow, PRs are the work,
@@ -25,9 +25,11 @@ You ──idea──▶ PM ──briefs──▶ Developer ∥ QA(test-first) �
   developer codes, then re-verifies the exact commit. A read-only reviewer on a different model
   checks correctness and security. Verdicts are bound to a commit SHA.
 - **Least privilege, enforced:** a PreToolUse hook gives each role its own write scope and
-  blocks merges, force-pushes, deploys, secret access and guardrail edits, in every permission mode.
-- **Humans decide:** scope (G1), architecture (G2), every merge (G3), production (G4),
-  and anything involving money, real users, production data or credentials (G5).
+  lets only the PM merge (SHA-bound, never `--admin`), and blocks force-pushes, deploys, secret
+  access and guardrail edits, in every permission mode.
+- **Humans decide:** scope (G1), architecture (G2), production (G4),
+  and anything involving money, real users, production data or credentials (G5). Merging (G3)
+  is automated behind the gate.
 
 ## Quick start
 

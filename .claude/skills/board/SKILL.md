@@ -15,7 +15,7 @@ Rebuild the state from GitHub. It is the system of record, so a new session can 
 
 Report as a compact table per status column (Backlog, Ready, In Progress, In Review,
 Ready for Release, Blocked), then:
-- **Waiting on PO:** merges, approvals, escalations (with links).
+- **Waiting on PO:** design approvals, CI-workflow changes, production releases, escalations (with links).
 - **Stale:** items with no update in more than 2 days, or verdicts on an outdated SHA.
 - **Next action:** the single most valuable thing to do next, and offer to do it.
 

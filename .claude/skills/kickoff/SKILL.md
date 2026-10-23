@@ -32,7 +32,8 @@ You are acting as the **PM** (see `.claude/agents/pm.md`). Product idea: $ARGUME
   and the instruction to evaluate mature existing solutions first.
 - Review the returned design for completeness: contracts exist for every epic, ADRs list
   alternatives, and the walking skeleton is defined.
-- **G2:** ask the PO to review and merge the `design: ...` PR (stack, ADRs, build vs buy).
+- **G2:** ask the PO to approve the `design: ...` PR (stack, ADRs, build vs buy). After they approve, merge it
+  through the merge gate.
 
 ## 4. Backlog
 

@@ -35,13 +35,14 @@ flowchart TB
     CI[[Actions CI<br/>make ci · secrets · SAST · deps]]
     ENV[[Environments<br/>staging · production✋]]
   end
-  PO -- ideas, approvals, merges --> PM
+  PO -- ideas, approvals --> PM
   PM -- briefs --> DEV & QA & REV & ARC & OPS
   DEV & QA & REV & ARC & OPS -- reports --> PM
   PM <--> ISS
   DEV & QA & ARC & OPS --> PR
   PR --> CI --> ENV
-  PO -- merge / approve deploy --> PR & ENV
+  PM -- merge gate (SHA-bound) --> PR
+  PO -- approve production --> ENV
   GUARD -. checks every write & shell call .- DEV & QA & REV & ARC & OPS & PM
 ```
 
@@ -53,7 +54,7 @@ flowchart TB
 | Orchestration | PM agent following playbooks (`/kickoff`, `/deliver`, `/release`, `/board`) | Lightweight. The deterministic parts (gates, deploys) live in GitHub, not in the LLM |
 | System of record | GitHub Issues, labels, PRs, comments, releases | Durable, visible to humans, survives ephemeral containers, free |
 | Quality gates | GitHub Actions + branch protection + SHA-bound agent verdicts | Deterministic checks the agents cannot talk their way past |
-| Human gates | PO merges PRs; `production` environment requires reviewer; `po:approved` label for risk:2 | Supervised model: humans own irreversible and high-impact actions |
+| Human gates | PO approves scope, architecture and production (`production` environment reviewer); `po:approved` for risk:2. Merges are automated behind the SHA-bound merge gate | Humans own irreversible and high-impact actions; reversible integration is automated |
 | Guardrails | `guard.py` hook + `policy.json`, permission deny rules, CODEOWNERS | Least privilege per role, enforced even in auto/bypass permission modes |
 | Observability | Verdict markers + GitHub timeline → `scripts/metrics.py`; token/cost via Claude Console usage or Claude Code OpenTelemetry | No extra infrastructure in v1 |
 
