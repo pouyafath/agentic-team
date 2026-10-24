@@ -1,6 +1,6 @@
 # Deterministic quality gates. Mark every job here as a required status check on main.
 # The devops agent adds toolchain setup (setup-node, setup-python, caches, ...) per project
-# and may harden it by pinning actions to commit SHAs.
+# Actions are pinned to commit SHAs (version in the comment); update them together.
 name: CI
 
 on:
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803  # v6.1.0
       # - uses: actions/setup-node@v5      # project-specific toolchain goes here
       - name: Lint, types, unit and acceptance tests, dependency audit
         run: make ci
@@ -30,11 +30,14 @@ jobs:
     name: secret scan
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read   # gitleaks lists the PR's commits; required on private repos
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803  # v6.1.0
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7  # v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Organization-owned repositories need a (free) license key:
@@ -46,7 +49,7 @@ jobs:
     timeout-minutes: 15
     container: semgrep/semgrep
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803  # v6.1.0
       - run: semgrep scan --config p/default --error --metrics=off
 
   dependencies:
@@ -59,8 +62,8 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/dependency-review-action@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803  # v6.1.0
+      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48  # v4.9.0
         with:
           fail-on-severity: high
           comment-summary-in-pr: on-failure
