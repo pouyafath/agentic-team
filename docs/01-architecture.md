@@ -122,6 +122,9 @@ Containers and sessions are disposable. A new session runs `/board` and continue
 - **Workspaces:** each building agent runs in its own git worktree. QA and the reviewer
   check out the exact SHA detached. Branch namespaces are owned per role
   (`story/`, `qa/`, `design/`, `ops/`) and enforced by the guard.
+- **Containment:** file writes stay inside the project checkout and its worktrees. Outside it, only
+  temp dirs, Claude's memory files and declared data roots (`AGENTIC_EXTRA_WRITE_ROOTS`) are
+  writable, so agents can't edit other projects on a shared machine.
 - **Write scopes:** the developer can't touch CI, infra or acceptance tests; QA only tests;
   the reviewer nothing; the architect only `docs/`; devops only CI and infra. Nobody but the PO
   edits `.claude/`, `CLAUDE.md` or CODEOWNERS.

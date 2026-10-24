@@ -117,7 +117,7 @@ class WriteRules(unittest.TestCase):
         event = {"tool_name": tool, "tool_input": {"file_path": os.path.join(self.repo, rel)}}
         if agent:
             event["agent_type"] = agent
-        return guard.decide(event, POLICY, maintenance)
+        return guard.decide(event, POLICY, maintenance, env={})
 
     def test_role_write_scopes(self):
         allowed = {
@@ -158,12 +158,69 @@ class WriteRules(unittest.TestCase):
         open(os.path.join(wt, ".git"), "w").close()  # worktrees have a .git file
         event = {"tool_name": "Edit", "agent_type": "qa", "cwd": wt,
                  "tool_input": {"file_path": "tests/acceptance/test_ac1.py"}}
-        self.assertIsNone(guard.decide(event, POLICY))
+        self.assertIsNone(guard.decide(event, POLICY, env={}))
         event["tool_input"]["file_path"] = "src/app.ts"
-        self.assertIsNotNone(guard.decide(event, POLICY))
+        self.assertIsNotNone(guard.decide(event, POLICY, env={}))
         outside = {"tool_name": "Write", "agent_type": "reviewer",
                    "tool_input": {"file_path": "/nonexistent-root-xyz/scratch/notes.md"}}
-        self.assertIsNone(guard.decide(outside, POLICY))
+        self.assertIsNone(guard.decide(outside, POLICY, env={}))
+
+
+class Containment(unittest.TestCase):
+    """With CLAUDE_PROJECT_DIR known, writes stay in the project, its worktrees and allowed roots."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        base = os.path.realpath(self.tmp.name)
+        self.project = os.path.join(base, "proj")
+        os.makedirs(os.path.join(self.project, ".git", "worktrees"))
+        self.inner_wt = self.worktree(os.path.join(self.project, ".claude", "worktrees", "a"), "a")
+        self.outer_wt = self.worktree(os.path.join(base, "elsewhere", "b"), "b")
+        self.other = os.path.join(base, "other-project")
+        os.makedirs(os.path.join(self.other, ".git"))
+        self.home = os.path.join(base, "home")
+        self.data = os.path.join(base, "data")
+        self.scratch = os.path.join(base, "scratch")
+        self.policy = dict(POLICY, write_containment={"always": []})  # test dirs live in /tmp
+        self.env = {"CLAUDE_PROJECT_DIR": self.project, "HOME": self.home,
+                    "AGENTIC_EXTRA_WRITE_ROOTS": self.data, "TMPDIR": self.scratch}
+
+    def worktree(self, path, name):
+        os.makedirs(path)
+        with open(os.path.join(path, ".git"), "w") as f:
+            f.write(f"gitdir: {self.project}/.git/worktrees/{name}\n")
+        return path
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def write(self, path, agent="developer", maintenance=False, env=None):
+        event = {"tool_name": "Write", "tool_input": {"file_path": path}}
+        if agent:
+            event["agent_type"] = agent
+        return guard.decide(event, self.policy, maintenance, env=self.env if env is None else env)
+
+    def test_project_and_worktrees(self):
+        self.assertIsNone(self.write(os.path.join(self.project, "src", "app.py")))
+        self.assertIsNone(self.write(os.path.join(self.inner_wt, "src", "app.py")))
+        self.assertIsNone(self.write(os.path.join(self.outer_wt, "src", "app.py")))
+        self.assertIsNotNone(self.write(os.path.join(self.outer_wt, "src", "app.py"), agent="qa"))
+        self.assertIsNotNone(self.write(os.path.join(self.project, ".claude", "settings.json")))
+
+    def test_outside_project(self):
+        self.assertIsNotNone(self.write(os.path.join(self.other, "src", "app.py")))
+        self.assertIsNotNone(self.write(os.path.join(self.home, "notes.txt"), agent=None))
+        self.assertIsNotNone(self.write(os.path.join(self.home, ".claude", "projects", "p", "log.jsonl")))
+        self.assertIsNone(self.write(os.path.join(self.home, ".claude", "projects", "p", "memory", "m.md"), agent=None))
+        self.assertIsNone(self.write(os.path.join(self.data, "cache", "features.json")))
+        self.assertIsNone(self.write(os.path.join(self.scratch, "notes.md"), agent="reviewer"))
+        self.assertIsNone(self.write(os.path.join(self.other, "src", "app.py"), maintenance=True))
+        self.assertIsNone(self.write(os.path.join(self.other, "src", "app.py"), env={}))  # project unknown
+
+    def test_symlink_escape(self):
+        os.makedirs(os.path.join(self.project, "src"))
+        os.symlink(self.other, os.path.join(self.project, "src", "link"))
+        self.assertIsNotNone(self.write(os.path.join(self.project, "src", "link", "app.py")))
 
 
 class HookProtocol(unittest.TestCase):

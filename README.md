@@ -76,7 +76,9 @@ docs/                         design deliverables (below), ADRs, runbooks
 ## Maintaining the guardrails
 
 Agents cannot edit `.claude/`, `CLAUDE.md` or CODEOWNERS. To change them, launch Claude Code with
-`AGENTIC_MAINTENANCE=1` (or edit by hand), then run `make ci`. The guard's tests live in
+`AGENTIC_MAINTENANCE=1` (or edit by hand), then run `make ci`. On a shared machine, list the
+project's data folders in `AGENTIC_EXTRA_WRITE_ROOTS` (in `.claude/settings.local.json` → `env`);
+agents can't write files anywhere else outside the project. The guard's tests live in
 `scripts/tests/`. The hook is a guardrail against mistakes. The hard boundaries are GitHub branch
 protection, environment approvals, and keeping production credentials out of agent environments.
 
