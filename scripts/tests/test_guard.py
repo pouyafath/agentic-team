@@ -78,7 +78,7 @@ class BashRules(unittest.TestCase):
         for cmd in ["terraform apply -auto-approve", "kubectl apply -f k8s/", "kubectl -n prod delete pod x",
                     "helm upgrade app ./chart", "fly deploy", "vercel deploy --prod", "npm publish",
                     "docker push ghcr.io/o/app:1", "stripe charges create --live",
-                    "export STRIPE_KEY=sk_live_abc123"]:
+                    "export STRIPE_KEY=sk_live_abc123"]:  # gitleaks:allow (fake key: the test checks the guard blocks it)
             self.assertBlocked(cmd, "devops")
         for cmd in ["terraform plan", "terraform validate", "kubectl get pods", "helm template ./chart",
                     "docker build -t app .", "stripe listen --forward-to localhost:3000"]:
