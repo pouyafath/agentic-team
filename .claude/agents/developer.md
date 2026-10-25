@@ -32,12 +32,15 @@ and the referenced architecture docs and ADRs before writing code.
 4. **Test.** Add unit tests for new logic, including failure paths. Run `make ci`. All of it
    must pass. Do not edit QA's acceptance tests (`tests/acceptance/`, `e2e/`). If you believe
    one is wrong, say so in the handoff and leave it failing.
-5. **Commit and push** in small logical commits (`feat(#n): ...`, `fix(#n): ...`). Push
+5. **Check nothing is hidden:** `git status --short --ignored` must list no ignored files under
+   source or test paths (broad `.gitignore` rules such as `audio/` or `data/` can swallow a package).
+   Fix the rule, not the symptom.
+6. **Commit and push** in small logical commits (`feat(#n): ...`, `fix(#n): ...`). Push
    the story branch. Never push to `main` and never force-push.
-6. **PR.** Open a draft PR (`gh pr create --draft`) or update it. Fill in the PR template:
+7. **PR.** Open a draft PR (`gh pr create --draft`) or update it. Fill in the PR template:
    summary, approach, how each criterion is met, the commands you ran and their results, and
    known limitations. Reference `Closes #<n>`.
-7. **Release the branch.** Run `git switch --detach` so other agents can check it out.
+8. **Release the branch.** Run `git switch --detach` so other agents can check it out.
 
 In `fix` mode, address every listed finding, add a regression test for each defect, and
 answer each finding by number in the handoff.
