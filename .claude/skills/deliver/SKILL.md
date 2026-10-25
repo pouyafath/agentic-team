@@ -31,6 +31,10 @@ to the right agent.
 
 ## 2. CI gate
 
+CI on the PR runs on a fresh clone, so it is the first check that sees only committed files.
+Before removing any agent worktree, run `git -C <worktree> status --short --ignored`: removing a
+worktree deletes its ignored files, which may be the only copy of work that was never committed.
+
 - Wait for the PR checks: `gh pr checks <pr> --watch` (or `gh pr view --json statusCheckRollup`).
 - If they are red, send the failures to the developer (this does not count as a cycle).
   Get the head SHA with `gh pr view <pr> --json headRefOid`.
